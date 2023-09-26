@@ -1,5 +1,5 @@
 # Petit Chat Noir
-Inference and NLP engine using [[https://www.jeuxdemots.org/rezo-dump.php]]JeuxDeMots as its relations database
+Inference and NLP engine using [JeuxDeMots](https://www.jeuxdemots.org/rezo-dump.php) as its relations database
 
 # Dependencies
 
