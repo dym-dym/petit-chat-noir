@@ -1,0 +1,6 @@
+# HTTP Requests 
+request3 >= 2.19
+
+# HTTP Parsing
+beautifulsoup4 == 4.12.2
+
