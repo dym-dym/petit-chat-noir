@@ -4,3 +4,11 @@ request3 >= 2.19
 # HTTP Parsing
 beautifulsoup4 == 4.12.2
 
+# Graph handling
+rustworkx[mpl] == 0.13.1
+pydot
+pillow
+
+# Testing
+pytest == 7.4.2
+pytest-cov == 4.1.0
