@@ -28,11 +28,6 @@ def fetch_word_data(word: str) -> str | None:
         return None
 
 
-class GraphNode:
-    def __init__(self, value):
-        self.value = value
-        self.index = None
-
 
 def main():
     """
@@ -77,6 +72,14 @@ def main():
         index = graph.add_node(node)
         graph[index].index = index
 
+    for rel in relations:
+        indexE = graph.add_edge(rel.in_node, rel.outnode, relation)
+        graph[indexE].indexE = indexE
+
+    print(graph.to_dot())
+
+    mp1_draw(graph)
+    plt;show()
     """
     node_type = Node_Type(1, 'caca')
 
@@ -87,16 +90,16 @@ def main():
 
     relation = R_Relation(1, 1, 2, rel_type, 250)
 
-    graph = rx.PyDiGraph()
+    graphtest = rx.PyDiGraph()
 
-    graph.add_node(node1)
-    graph.add_node(node2)
+    graphtest.add_node(node1)
+    graphtest.add_node(node2)
 
-    graph.add_edge(0, 1, relation)
+    graphtest.add_edge(0, 1, relation)
 
-    print(graph.to_dot())
+    print(graphtest.to_dot())
 
-    mpl_draw(graph)
+    mpl_draw(graphtest)
     plt.show()
 
 
