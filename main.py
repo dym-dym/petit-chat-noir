@@ -28,18 +28,11 @@ def fetch_word_data(word: str) -> str | None:
         return None
 
 
-class GraphNode:
-    def __init__(self, value):
-        self.value = value
-        self.index = None
-
-
 def main():
-    """
 
     nodes: list[Node] = []
     node_types: list[Node_Type] = []
-    relations: list[tuple[int, int, R_Relation]] = []
+    relations: list[R_Relation] = []
     relation_types: list[Relation_Type] = []
 
     jdm_data = fetch_word_data("Noah")
@@ -60,41 +53,26 @@ def main():
                 print(json.dumps(relation_type,
                                  default=lambda x: x.__dict__))
             if elem.startswith('r;'):
-                # relation = parse_relation(elem)
-                # relations.append(
-                # (relation.in_node, relation.out_node, relation))
-                # print(json.dumps(relation,
-                # default=lambda x: x.__dict__))
-                pass
+                relation = parse_relation(elem, relation_types)
+                relations.append(
+                    relation)
+                print(json.dumps(relation,
+                                 default=lambda x: x.__dict__))
             if elem.startswith('e;'):
-                node = GraphNode(parse_node(elem))
+                node = parse_node(elem, node_types)
                 print(json.dumps(node,
                                  default=lambda x: x.__dict__))
                 nodes.append(node)
 
-    graph = rx.PyGraph()
-    for node in nodes:
-        index = graph.add_node(node)
-        graph[index].index = index
-
-    """
-    node_type = Node_Type(1, 'caca')
-
-    node1 = Node(1, 'osef', node_type, 200, '')
-    node2 = Node(2, 'Staline', node_type, 200, '')
-
-    rel_type = Relation_Type(1, 'r_mescouilles', 'osef_mais_en_relation', '')
-
-    relation = R_Relation(1, 1, 2, rel_type, 250)
-
     graph = rx.PyDiGraph()
 
-    graph.add_node(node1)
-    graph.add_node(node2)
+    graph_ids: dict[int, int] = {}
+    for node in nodes:
+        graph_ids[node.node_id] = graph.add_node(node)
 
-    graph.add_edge(0, 1, relation)
-
-    print(graph.to_dot())
+    for relation in relations:
+        graph.add_edge(graph_ids[relation.in_node],
+                       graph_ids[relation.out_node], relation)
 
     mpl_draw(graph)
     plt.show()

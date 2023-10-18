@@ -42,7 +42,8 @@ def parse_relation(line: str, relation_types: list[Relation_Type]) -> R_Relation
     in_node = int(line_split.pop(0))
     r_type_id = int(line_split.pop(0))
     weight = int(line_split.pop(0))
-    r_type = filter(lambda x: x.r_type_id == r_type_id, relation_types).pop(0)
+    r_type = list(filter(lambda x: x.r_type_id ==
+                  r_type_id, relation_types))[0]
 
     return R_Relation(rid, out_node, in_node, r_type, weight)
 
@@ -65,8 +66,8 @@ def parse_type(line: str) -> Node_Type:
 
 
 class Node:
-    def __init__(self, node_id: int, name: str, node_type: Node_Type,
-                 weight: int, formatted_name: str):
+    def __init__(self, node_id: int, name: str, node_type: Node_Type | None,
+                 formatted_name: str):
         self.node_id = node_id
         self.name = name
         self.node_type = node_type
@@ -76,11 +77,16 @@ class Node:
         return f"Node id : {self.node_id}\nNode name: {self.name}\nNode type: {self.node_type}\nFormatted node name: {self.formatted_name}\n"
 
 
-def parse_node(line: str) -> Node:
+def parse_node(line: str, node_types: list[Node_Type]) -> Node:
+
     line_split = line.split(";")
     line_split.pop(0)
     node_id = int(line_split.pop(0).strip("'"))
     name = str(line_split.pop(0).strip("'"))
-    node_type = int(line_split.pop(0).strip("'").strip("&gt"))
-    weight = int(line_split.pop(0).strip("'"))
-    return Node(node_id, name, node_type, weight, "")
+    node_type_id = int(line_split.pop(0).strip("'").strip("&gt"))
+
+    node_type = None if len(n := list(filter(lambda x: x.type_id ==
+                                             node_type_id, node_types))) == 0 else n[0]
+
+    # weight = int(line_split.pop(0).strip("'"))
+    return Node(node_id, name, node_type, "")
