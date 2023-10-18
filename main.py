@@ -28,14 +28,14 @@ def fetch_word_data(word: str) -> str | None:
         return None
 
 
-def main():
+def generate_word_graph(word: str):
 
     nodes: list[Node] = []
     node_types: list[Node_Type] = []
     relations: list[R_Relation] = []
     relation_types: list[Relation_Type] = []
 
-    jdm_data = fetch_word_data("Noah")
+    jdm_data = fetch_word_data(word)
 
     if jdm_data:
 
@@ -73,6 +73,12 @@ def main():
     for relation in relations:
         graph.add_edge(graph_ids[relation.in_node],
                        graph_ids[relation.out_node], relation)
+
+    return graph
+
+
+def main():
+    graph = generate_word_graph("Noah")
 
     mpl_draw(graph)
     plt.show()

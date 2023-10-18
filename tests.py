@@ -1,2 +1,2 @@
-def test():
-    assert 1 == 1
+def diGraph_generation():
+    pass
