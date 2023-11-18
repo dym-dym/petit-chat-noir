@@ -21,3 +21,9 @@ pip install -r requirements.txt
 # Execute main
 python3 main.py
 ```
+
+# Authors
+
+- Bettendroffer Dylan
+- Collinet Noah
+- Veydarier Joshua
