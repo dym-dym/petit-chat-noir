@@ -83,10 +83,13 @@ def parse_node(line: str, node_types: list[Node_Type]) -> Node:
     line_split.pop(0)
     node_id = int(line_split.pop(0).strip("'"))
     name = str(line_split.pop(0).strip("'"))
-    node_type_id = int(line_split.pop(0).strip("'").strip("&gt"))
+    # TODO: Regarder mieux la forme des données pour les nettoyer correctement
+    node_type_id = int(line_split.pop(0).strip(
+        "'").strip("&gt").replace(':', ''))
 
-    node_type = None if len(n := list(filter(lambda x: x.type_id ==
-                                             node_type_id, node_types))) == 0 else n[0]
+    node_type = None if len(n := list(
+        filter(lambda x: x.type_id ==
+               node_type_id, node_types))) == 0 else n[0]
 
     # weight = int(line_split.pop(0).strip("'"))
     return Node(node_id, name, node_type, "")

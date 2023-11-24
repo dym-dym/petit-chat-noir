@@ -1,4 +1,3 @@
-import json
 import request3
 import rustworkx as rx
 from bs4 import BeautifulSoup
@@ -31,7 +30,10 @@ def fetch_word_data(word: str) -> str | None:
 
 
 # Generate the directed graph of a given word
-def generate_word_graph(word: str, serialize: bool = True, debug: bool = False) -> rx.PyDiGraph:
+def generate_word_graph(word: str,
+                        serialize: bool = True,
+                        debug: bool = False) -> tuple[rx.PyDiGraph,
+                                                      dict[int, int]]:
 
     # Initializing lists for graph generation
     nodes: list[Node] = []
@@ -40,8 +42,6 @@ def generate_word_graph(word: str, serialize: bool = True, debug: bool = False) 
     relation_types: list[Relation_Type] = []
 
     # TODO: Find a better serialization format for the word
-
-    serialized_values: str = "["
 
     # Getting data iterator
     jdm_data = fetch_word_data(word)
@@ -58,37 +58,18 @@ def generate_word_graph(word: str, serialize: bool = True, debug: bool = False) 
             if elem.startswith('nt;'):
                 node_type = parse_type(elem)
                 node_types.append(node_type)
-                serialized_values += json.dumps(node_type,
-                                                default=lambda x: x.__dict__) + "\n"
             # Generates Relation_Type objects
             if elem.startswith('rt;'):
                 relation_type = parse_relation_type(elem)
                 relation_types.append(relation_type)
-                serialized_values += json.dumps(relation_type,
-                                                default=lambda x: x.__dict__) + "\n"
             # Generates R_Relation objects
             if elem.startswith('r;'):
                 relation = parse_relation(elem, relation_types)
-                relations.append(
-                    relation)
-                serialized_values += json.dumps(relation,
-                                                default=lambda x: x.__dict__) + "\n"
+                relations.append(relation)
             # Generates entity (Node) objects
             if elem.startswith('e;'):
                 node = parse_node(elem, node_types)
                 nodes.append(node)
-                serialized_values += json.dumps(node,
-                                                default=lambda x: x.__dict__) + "\n"
-
-    serialized_values += "]"
-
-    if serialize:
-        try:
-            with open(f"./cache/{word}.json", "x") as file:
-                file.write(serialized_values)
-
-        except FileExistsError:
-            print(f"Error: file {word}.json already in cache")
 
     graph = rx.PyDiGraph()
 
@@ -102,4 +83,31 @@ def generate_word_graph(word: str, serialize: bool = True, debug: bool = False) 
         graph.add_edge(graph_ids[relation.in_node],
                        graph_ids[relation.out_node], relation)
 
-    return graph
+    if serialize:
+        rx.node_link_json(
+            graph, f"./cache/{word}.json",
+            None,
+            dict_from_node,
+            dict_from_relation,
+        )
+
+    return (graph, graph_ids)
+
+
+def dict_from_node(node: Node):
+
+    return_dict = {'node_id': str(node.node_id), 'name': str(node.name),
+                   'node_type': str(node.node_type.__dict__)
+                   if node.node_type is not None else '',
+                   'formatted_name': node.formatted_name}
+    return return_dict
+
+
+def dict_from_relation(vertex: R_Relation):
+
+    return_dict = {'rid': str(vertex.rid), 'out_node': str(vertex.out_node),
+                   'in_node': str(vertex.in_node),
+                   'r_type': str(vertex.r_type.__dict__)
+                   if vertex.r_type is not None else '',
+                   'weight': str(vertex.weight)}
+    return return_dict
