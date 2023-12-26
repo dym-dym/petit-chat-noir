@@ -128,7 +128,8 @@ def connect_word_graphs(graph1: PyDiGraph,
                         graph2_dict: dict[int, int]) -> (PyDiGraph, dict[int, int]):
 
     # Get all the nodes and relations from graph1 in a new graph
-    res = graph1.copy()  # Shallow copy TODO: take care of correcting that
+    # WARNING: Shallow copy
+    res = graph1.copy()
 
     values = []
     for node in graph1.nodes():
@@ -155,5 +156,14 @@ def connect_word_graphs(graph1: PyDiGraph,
         if edge[0] != 0 and edge[0] != compose_result[0] and edge[0] == edge[1]:
             res.remove_edge(edge[0], edge[1])
 
-    id_mapping = {}
+    id_mapping = get_updated_mapping(res)
+
     return (res, id_mapping)
+
+
+def get_updated_mapping(graph: PyDiGraph) -> dict[int, int]:
+    res = {}
+    for (index, node) in enumerate(graph.nodes()):
+        res[node.node_id] = index
+
+    return res
