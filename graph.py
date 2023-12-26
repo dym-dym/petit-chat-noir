@@ -125,7 +125,7 @@ def dict_from_relation(vertex: R_Relation):
 def connect_word_graphs(graph1: PyDiGraph,
                         graph1_dict: dict[int, int],
                         graph2: PyDiGraph,
-                        graph2_dict: dict[int, int]) -> (PyDiGraph, dict[int, int]):
+                        graph2_dict: dict[int, int]) -> tuple[PyDiGraph, dict[int, int]]:
 
     # Get all the nodes and relations from graph1 in a new graph
     # WARNING: Shallow copy
