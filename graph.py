@@ -1,7 +1,16 @@
-import request3
+import requests
 import rustworkx as rx
 from bs4 import BeautifulSoup
-from jdm_types import parse_type, parse_relation_type, parse_relation, parse_node, Node, Node_Type, Relation_Type, R_Relation
+from rustworkx.rustworkx import PyDiGraph
+from jdm_types import (
+    parse_type,
+    parse_relation_type,
+    parse_relation,
+    parse_node,
+    Node, Node_Type,
+    Relation_Type,
+    R_Relation
+)
 
 
 # Fetches relationnal data from jeuxdemots for
@@ -10,7 +19,7 @@ def fetch_word_data(word: str) -> str | None:
 
     try:
         # Get HTML page from JeuxDeMots
-        r = request3.get(
+        r = requests.get(
             f"https://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel={word}"
         )
 
@@ -23,7 +32,7 @@ def fetch_word_data(word: str) -> str | None:
                    str(soup.find("code")).split('\n')))
 
     # On exception return None
-    except request3.exceptions.RequestException as e:
+    except requests.exceptions.RequestException as e:
         print("Couldn't reach url with reason: ", e)
 
         return None
@@ -111,3 +120,40 @@ def dict_from_relation(vertex: R_Relation):
                    if vertex.r_type is not None else '',
                    'weight': str(vertex.weight)}
     return return_dict
+
+
+def connect_word_graphs(graph1: PyDiGraph,
+                        graph1_dict: dict[int, int],
+                        graph2: PyDiGraph,
+                        graph2_dict: dict[int, int]) -> (PyDiGraph, dict[int, int]):
+
+    # Get all the nodes and relations from graph1 in a new graph
+    res = graph1.copy()  # Shallow copy TODO: take care of correcting that
+
+    values = []
+    for node in graph1.nodes():
+        values += filter(lambda node_from_g2: node_from_g2.node_id ==
+                         node.node_id, graph2.nodes())
+
+    # Compose both graphs on nodes with the same ID
+    values_dict = {}
+    for value in values:
+        values_dict[graph1_dict[value.node_id]] = (
+            graph2_dict[value.node_id], 0)
+
+    compose_result = res.compose(graph2.copy(), values_dict)
+
+    # Merge every node sharing the same id
+    for value in values:
+        res.merge_nodes(
+            compose_result[graph2_dict[value.node_id]],
+            graph1_dict[value.node_id])
+
+    # Remove newly added edges without removing the previously
+    # existing reflexive edges
+    for edge in res.edge_list():
+        if edge[0] != 0 and edge[0] != compose_result[0] and edge[0] == edge[1]:
+            res.remove_edge(edge[0], edge[1])
+
+    id_mapping = {}
+    return (res, id_mapping)

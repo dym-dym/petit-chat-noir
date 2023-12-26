@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 
 class Relation_Type:
     def __init__(self, r_type_id: int, r_type_name: str, trgpname: str,
@@ -65,6 +67,7 @@ def parse_type(line: str) -> Node_Type:
     return Node_Type(type_id, type_name)
 
 
+@dataclass
 class Node:
     def __init__(self, node_id: int, name: str, node_type: Node_Type | None,
                  formatted_name: str):
@@ -83,6 +86,7 @@ def parse_node(line: str, node_types: list[Node_Type]) -> Node:
     line_split.pop(0)
     node_id = int(line_split.pop(0).strip("'"))
     name = str(line_split.pop(0).strip("'"))
+
     # TODO: Regarder mieux la forme des données pour les nettoyer correctement
     node_type_id = int(line_split.pop(0).strip(
         "'").strip("&gt").replace(':', ''))

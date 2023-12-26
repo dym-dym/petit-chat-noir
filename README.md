@@ -3,7 +3,7 @@ Inference and NLP engine using [JeuxDeMots](https://www.jeuxdemots.org/rezo-dump
 
 # Dependencies
 
-- request3
+- requests
 - BeautifulSoup4
 
 # Install
