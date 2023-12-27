@@ -33,7 +33,8 @@ class R_Relation:
         self.weight = weight
 
     def __str__(self):
-        return f"Relation id : {self.rid}\nRelation origin: {self.out_node}\nRelation target: {self.in_node}\nRelation type: {self.r_type}\nRelation weight: {self.weight}\n"
+        return f"{self.r_type.r_type_name}"
+        # return f"Relation id : {self.rid}\nRelation origin: {self.out_node}\nRelation target: {self.in_node}\nRelation type: {self.r_type}\nRelation weight: {self.weight}\n"
 
 
 def parse_relation(line: str, relation_types: list[Relation_Type]) -> R_Relation:
@@ -77,7 +78,8 @@ class Node:
         self.formatted_name = formatted_name
 
     def __str__(self):
-        return f"Node id : {self.node_id}\nNode name: {self.name}\nNode type: {self.node_type}\nFormatted node name: {self.formatted_name}\n"
+        return self.name
+        # return f"Node id : {self.node_id}\nNode name: {self.name}\nNode type: {self.node_type}\nFormatted node name: {self.formatted_name}\n"
 
 
 def parse_node(line: str, node_types: list[Node_Type]) -> Node:

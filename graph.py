@@ -145,10 +145,16 @@ def connect_word_graphs(graph1: PyDiGraph,
     compose_result = res.compose(graph2.copy(), values_dict)
 
     # Merge every node sharing the same id
+    # unless one of the roots of the graphs is included in the other graph
     for value in values:
-        res.merge_nodes(
-            compose_result[graph2_dict[value.node_id]],
-            graph1_dict[value.node_id])
+        try:
+            if graph2_dict[value.node_id] != 0 and graph1_dict[value.node_id] != 0:
+                res.merge_nodes(
+                    compose_result[graph2_dict[value.node_id]],
+                    graph1_dict[value.node_id])
+
+        except IndexError:
+            print(f"Node {value.node_id} was removed before being handled")
 
     # Remove newly added edges without removing the previously
     # existing reflexive edges
@@ -162,8 +168,4 @@ def connect_word_graphs(graph1: PyDiGraph,
 
 
 def get_updated_mapping(graph: PyDiGraph) -> dict[int, int]:
-    res = {}
-    for (index, node) in enumerate(graph.nodes()):
-        res[node.node_id] = index
-
-    return res
+    return {node.node_id: index for (index, node) in enumerate(graph.nodes())}
