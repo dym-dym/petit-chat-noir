@@ -1,5 +1,4 @@
 import sqlite3
-import pathlib
 from sqlite3.dbapi2 import Connection, Cursor
 
 DEBUG = False
@@ -85,8 +84,9 @@ def insert_node(cursor: Cursor,
 def insert_relation_type(cursor: Cursor,
                          id: str, name: str, trgroupname: str, help: str):
     try:
-        cursor.execute(f"""INSERT INTO relation_type(id, name, trgroupname, help)
-                       VALUES ({id}, "{name}", "{trgroupname}", "{help}")""")
+        cursor.execute(f"""
+                        INSERT INTO relation_type(id, name, trgroupname, help)
+                        VALUES ({id}, "{name}", "{trgroupname}", "{help}")""")
     except sqlite3.IntegrityError:
         if DEBUG:
             print(f"Value {id} already exists")
@@ -99,8 +99,9 @@ def insert_relation(cursor: Cursor,
                     type: str,
                     weight: str):
     try:
-        cursor.execute(f"""INSERT INTO relation(id, out_node, in_node, type, weight)
-                       VALUES ({id}, {out_node}, {in_node}, {type}, {weight})""")
+        cursor.execute(f"""
+                    INSERT INTO relation(id, out_node, in_node, type, weight)
+                    VALUES ({id}, {out_node}, {in_node}, {type}, {weight})""")
     except sqlite3.IntegrityError:
         if DEBUG:
             print(f"Value {id} already exists")
@@ -148,20 +149,3 @@ def parse_relation(line: str) -> tuple[str, str, str, str, str]:
     r_type = str(line_split.pop(0))
     weight = str(line_split.pop(0))
     return (rid, out_node, in_node, r_type, weight)
-
-
-if __name__ == "__main__":
-
-    db_file = pathlib.Path("./cache.db")
-
-    (db, cursor) = create_database("cache.db")
-
-    insert_node_type(cursor, "1092873", "test_node_type")
-    insert_node_type(cursor, "1092874", "test_node_type2")
-    insert_node(cursor, "12983073", "test_node", "1092873", "Blah blah blah")
-    insert_node(cursor, "12983074", "test_node2", "1092874", "Blah blah blah")
-
-    res = cursor.execute(
-        "SELECT n.name FROM node n JOIN node_type nt ON n.type = nt.id WHERE nt.name = 'test_node_type'")
-
-    print(res.fetchall())
