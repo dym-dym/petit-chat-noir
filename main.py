@@ -1,5 +1,5 @@
-from database import create_database
-from words import generate_word_graph
+from database.database import create_database
+from jdm.words import generate_word_graph
 
 
 def main():

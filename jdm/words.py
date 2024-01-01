@@ -1,7 +1,7 @@
 from sqlite3 import Cursor
 import requests
 from bs4 import BeautifulSoup
-from insertion import (
+from database.insertion import (
     insert_node,
     insert_node_type,
     insert_relation,
