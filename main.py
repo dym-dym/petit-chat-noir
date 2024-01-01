@@ -1,12 +1,12 @@
-import jdm_api as jdm
-from queries import create_database
+from database import create_database
+from words import generate_word_graph
 
 
 def main():
     (_, cursor) = create_database("./cache.db")
     # Don't test using common words. Chat has way too many relations
-    jdm.generate_word_graph(cursor, "chat")
-    jdm.generate_word_graph(cursor, "animal")
+    generate_word_graph(cursor, "chat")
+    generate_word_graph(cursor, "animal")
 
     res = cursor.execute(
         "SELECT * FROM relation ORDER BY weight DESC")

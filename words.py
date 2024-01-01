@@ -1,15 +1,18 @@
 from sqlite3 import Cursor
 import requests
 from bs4 import BeautifulSoup
-from queries import (
+from insertion import (
     insert_node,
     insert_node_type,
     insert_relation,
     insert_relation_type,
+)
+from parsing import (
     parse_node,
     parse_node_type,
     parse_relation,
-    parse_relation_type)
+    parse_relation_type
+)
 
 
 # Fetches relationnal data from jeuxdemots for
