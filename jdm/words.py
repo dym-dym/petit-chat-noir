@@ -7,7 +7,7 @@ from database.insertion import (
     insert_relation,
     insert_relation_type,
 )
-from parsing import (
+from .parsing import (
     parse_node,
     parse_node_type,
     parse_relation,
