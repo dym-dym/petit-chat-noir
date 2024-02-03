@@ -2,32 +2,37 @@
 # concerne tous les parsing de string
 def parse_node_type(line: str) -> tuple[str, str]:
     line_split = line.split(";")
-    line_split.pop(0)
-    type_id = str(line_split.pop(0))
-    type_name = str(line_split.pop(0).strip("'"))
+    line_split = [word for word in line_split]
+
+    type_id = str(line_split[1])  # str(line_split.pop(0))
+    # str(line_split.pop(0))
+    type_name = str(line_split[2])[1:len(line_split[2]) - 1]
     return (type_id, type_name)
 
 
 def parse_node(line: str) -> tuple[str, str, str, str]:
 
     line_split = line.split(";")
-    line_split.pop(0)
-    node_id = str(line_split.pop(0).strip("'"))
-    name = str(line_split.pop(0).strip("'"))
+    line_split = [word for word in line_split]
 
-    node_type = str(line_split.pop(0).strip(
-        "'").strip("&gt").replace(':', ''))
-    weight = str(line_split.pop(0).strip("'"))
+    node_id = str(line_split[1])
+    name = str(line_split[2])[1:len(line_split[2]) - 1]
+
+    node_type = str(line_split[3])
+    weight = str(line_split[4])
     return (node_id, name, node_type, weight)
 
 
 def parse_relation_type(line: str) -> tuple[str, str, str, str]:
     line_split = line.split(";")
-    line_split.pop(0)
-    r_type_id = str(line_split.pop(0))
-    r_type_name = str(line_split.pop(0))
-    trgpname = str(line_split.pop(0))
-    r_type_help = str(line_split.pop(0))
+    line_split = [word for word in line_split]
+
+    r_type_id = str(line_split[1])  # str(line_split.pop(0))
+    r_type_name = str(line_split[2])[1:len(
+        line_split[2]) - 1]  # str(line_split.pop(0))
+    trgpname = str(line_split[3])[1:len(
+        line_split[3]) - 1]  # str(line_split.pop(0))
+    r_type_help = str(line_split[4])  # str(line_split.pop(0))
     return (r_type_id, r_type_name, trgpname, r_type_help)
 
 

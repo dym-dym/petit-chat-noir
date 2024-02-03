@@ -1,5 +1,8 @@
 import sqlite3
 from sqlite3.dbapi2 import Connection, Cursor
+from datetime import datetime, timedelta
+
+from database.insertion import insert_node
 
 
 def get_connection_and_cursor(db_name: str) -> tuple[Connection, Cursor]:
@@ -8,11 +11,13 @@ def get_connection_and_cursor(db_name: str) -> tuple[Connection, Cursor]:
     return (db, cursor)
 
 
-def create_database(database_path: str) -> tuple[Connection, Cursor]:
-    file = open('cache.db', 'r')
-    file.close()
+def create_database(cursor: Cursor):
 
-    (db, cursor) = get_connection_and_cursor(database_path)
+    cursor.execute("""CREATE TABLE IF NOT EXISTS
+                            cached_words
+                                (word TEXT PRIMARY KEY,
+                                 last_updated DATE)
+                       """)
 
     cursor.execute("""CREATE TABLE IF NOT EXISTS
                         node_type
@@ -57,4 +62,45 @@ def create_database(database_path: str) -> tuple[Connection, Cursor]:
                                 REFERENCES relation_type(id)
                             )
                    """)
-    return (db, cursor)
+
+    cursor.execute("DROP TABLE IF EXISTS sentence_graph_node")
+    cursor.execute("""CREATE TABLE
+                        sentence_graph_node
+                            (
+                                id INTEGER PRIMARY KEY NOT NULL,
+                                value VARCHAR(200)
+                            )
+                  """)
+
+    cursor.execute("DROP TABLE IF EXISTS sentence_graph_relation")
+    cursor.execute("""CREATE TABLE
+                        sentence_graph_relation
+                            (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                out_node NUMBER,
+                                in_node NUMBER,
+                                type NUMBER,
+                                weight NUMBER,
+                                CONSTRAINT fk_sentence_out_node
+                                    FOREIGN KEY (out_node)
+                                    REFERENCES node(id),
+                                CONSTRAINT fk_sentence_in_node
+                                    FOREIGN KEY (in_node)
+                                    REFERENCES node(id),
+                                CONSTRAINT fk_sentence_relation_type
+                                    FOREIGN KEY (type)
+                                    REFERENCES relation_type(id)
+                            )
+                  """)
+
+
+def is_word_cached(cursor: Cursor, word: str) -> bool:
+    cursor.execute(
+        "SELECT last_updated FROM cached_words WHERE word = ?", (word,))
+    result = cursor.fetchone()
+
+    if result:
+        last_updated = datetime.strptime(result[0], '%Y-%m-%d')
+        if datetime.now() - last_updated < timedelta(days=30):
+            return True
+    return False
