@@ -1,19 +1,30 @@
+from re import split
 from sqlite3 import Cursor
-from database.insertion import insert_relation_type
+from database.insertion import insert_node, insert_relation_type
 
 from graph.insertion import insert_sen_node, insert_sen_rel
+from jdm.inference import get_reltype_id
+from jdm.words import get_pos, lemmatize
 
 
 def get_sen_node_id(cursor: Cursor, name: str):
+
     cursor.execute(
         """
-            SELECT id FROM sentence_graph_node WHERE value = ?
+            SELECT id FROM sentence_graph_node WHERE value = ? ORDER BY id DESC LIMIT 1
         """, (name,)
     )
+
+    try:
+        res = cursor.fetchone()[0]
+    except TypeError:
+        res = "-1"
+
+    return res
     return cursor.fetchone()[0]
 
 
-def parse_text(cursor: Cursor, input: str, DEBUG):
+def parse_text(cursor: Cursor, input: str, DEBUG) -> str:
     sentence_delimiters = set(".?!")
 
     elisions = {
@@ -33,15 +44,21 @@ def parse_text(cursor: Cursor, input: str, DEBUG):
     text = input.split()
 
     insert_sen_node(cursor, 0, "_START")
-    for word in text:
-        insert_sen_node(cursor, word)
+    insert_sen_node(cursor, 1, text[0])
 
     insert_relation_type(cursor, "100000", "r_succ", "", "", DEBUG)
     insert_relation_type(cursor, "100001", "r_pred", "", "", DEBUG)
-    insert_sen_rel(cursor, get_sen_node_id(cursor, "_START"),
-                   get_sen_node_id(cursor, text[0]), 100000)
+
+    start_id = get_sen_node_id(cursor, "_START")
+
+    first_id = get_sen_node_id(cursor, text[0])
+
+    insert_sen_rel(cursor, start_id, first_id, 100000, 1)
 
     for i in range(len(text) - 1):
+
+        insert_sen_node(cursor, i+1, text[i])
+        insert_sen_node(cursor, i+2, text[i+1])
         subject = text[i] if not all(
             c in sentence_delimiters for c in text[i]) else "_NEW_SENTENCE"
         object = text[i+1] if not all(
@@ -52,15 +69,21 @@ def parse_text(cursor: Cursor, input: str, DEBUG):
 
         insert_sen_node(cursor, subject_id, subject)
         insert_sen_node(cursor, object_id, object)
+
         insert_sen_rel(cursor, get_sen_node_id(cursor, subject),
                        get_sen_node_id(cursor, object), 100000, 1)
 
     subject_id = len(text)-1
     subject = text[-1] if not all(
-        c in sentence_delimiters for c in text_list[-1]) else "_NEW_SENTENCE"
+        c in sentence_delimiters for c in text[-1]) else "_NEW_SENTENCE"
+    insert_sen_node(cursor, len(text) + 1, "_END")
+    insert_sen_rel(cursor, get_sen_node_id(
+        cursor, text[-1]), len(text) + 1, 100000, 1)
+
+    return input
 
 
-def find_compound_words(text: str):
+def find_compound_words(text: list[str]):
     res = []
 
     compound = open("./compound_words_encoded.txt", "r")
@@ -81,4 +104,42 @@ def find_compound_words(text: str):
 
             if seq.lstrip() in words:
                 res.append(seq)
+
     return res
+
+
+def get_lowest_available_id(cursor: Cursor) -> int:
+    cursor.execute("SELECT max(id) FROM sentence_graph_relation")
+    return cursor.fetchone()[0]
+
+
+def add_relations_from_jdm(cursor: Cursor, rel: str):
+    cursor.execute("SELECT node.value FROM sentence_graph_node node")
+    words = cursor.fetchall()
+    for word in words:
+        for (lemma, weight) in lemmatize(cursor, word[0]):
+            if word[0] != lemma:
+                fresh_id = get_lowest_available_id(cursor) + 1
+                insert_sen_node(cursor, fresh_id, lemma)
+
+                insert_sen_rel(cursor, get_sen_node_id(cursor, word[0]), fresh_id,
+                               int(get_reltype_id(cursor, rel)), weight)
+
+
+def add_compounds(cursor: Cursor, compounds: list[str]):
+
+    for compound in compounds:
+        split_expr = compound.strip().split()
+
+        leftmost_id = get_sen_node_id(cursor, split_expr[0])
+        rightmost_id = get_sen_node_id(cursor, split_expr[-1])
+
+        insert_sen_node(cursor, get_lowest_available_id(cursor) + 1, compound)
+
+        insert_sen_rel(cursor, get_sen_node_id(cursor, compound),
+                       rightmost_id + 1,
+                       int(get_reltype_id(cursor, 'r_succ')), 1)
+
+        insert_sen_rel(cursor, leftmost_id - 1,
+                       get_sen_node_id(cursor, compound),
+                       int(get_reltype_id(cursor, 'r_succ')), 1)

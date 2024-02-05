@@ -81,14 +81,28 @@ def generate_word_graph(cursor: Cursor, word: str, DEBUG: bool):
                 insert_node(cursor, id, name, node_type, weight, DEBUG)
 
 
-def lemmatize(cursor: Cursor, word: str):
+def lemmatize(cursor: Cursor, word: str) -> list[tuple[str, int]]:
     request = """
-            SELECT DISTINCT n2.name
+            SELECT DISTINCT n2.name, r.weight
             FROM relation r
             JOIN node n1 ON r.out_node = n1.id
             JOIN node n2 ON r.in_node = n2.id
             JOIN relation_type rt ON rt.id = r.type
             WHERE rt.name = 'r_lemma'
+            AND n1.name = ?
+        """
+    cursor.execute(request, (word,))
+    return cursor.fetchall()
+
+
+def get_pos(cursor: Cursor, word: str) -> list[tuple[str, int]]:
+    request = """
+            SELECT DISTINCT n2.name, r.weight
+            FROM relation r
+            JOIN node n1 ON r.out_node = n1.id
+            JOIN node n2 ON r.in_node = n2.id
+            JOIN relation_type rt ON rt.id = r.type
+            WHERE rt.name = 'r_pos'
             AND n1.name = ?
         """
     cursor.execute(request, (word,))

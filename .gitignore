@@ -1,4 +1,4 @@
 terms
 venv
 __pycache__
-cache
+cache.db
