@@ -1,14 +1,16 @@
 from dataclasses import dataclass
-from sqlite3 import Cursor
-from graph.text.parsing import get_sen_node_id
+from sqlite3 import Cursor, IntegrityError
+from database.insertion import insert_relation_type
+from graph.insertion import insert_sen_node
+from graph.text.parsing import get_lowest_available_id, get_sen_node_id
 
-from jdm.inference import get_ent_id, get_relid, get_reltype_id
+from jdm.inference import get_reltype_id
 
 
 @dataclass
 class Rule:
-    head: list[str]
-    body: list[str]
+    body: list[tuple[str, str, str, str]]
+    head: list[tuple[str, str, str, str]]
     morphisms: list[str]
 
     def is_morphism_new(self, morph):
@@ -73,27 +75,43 @@ def build_query(cursor: Cursor, rule: Rule) -> str:
         if pattern[0] in body_variables:
             pattern_variables.append(pattern[0][1:])
         else:
+
             pattern_constants.append(pattern[0])
             pattern_filters.append(
                 f"out_node='{get_sen_node_id(cursor, pattern[0])}'")
         if pattern[1] in body_variables:
             pattern_variables.append(pattern[1][1:])
         else:
-            pattern_constants.append(pattern[1])
-            # print(pattern[1])
-            rel_id = get_reltype_id(cursor, pattern[1])
-            pattern_filters.append(f"type='{rel_id}'")
+            if pattern[1] != '!rgx':
+
+                pattern_constants.append(pattern[1])
+                rel_id = get_reltype_id(cursor, pattern[1])
+                pattern_filters.append(f"type='{rel_id}'")
         if pattern[2] in body_variables:
             pattern_variables.append(pattern[2][1:])
         else:
             pattern_constants.append(pattern[2])
-            pattern_filters.append(
-                f"in_node='{pattern[2]}'")
+            if pattern[1] == '!rgx':
+
+                split_pattern = pattern[2].replace(
+                    "^(", "").replace(")", "").replace("$", "").split("|")
+                or_clause = "("
+
+                for elem in split_pattern:
+                    or_clause += f"'{get_sen_node_id(cursor, elem)}', "
+
+                or_clause = or_clause[:-2] + ")"
+                pattern_filters.append(or_clause)
+
+            else:
+
+                pattern_filters.append(
+                    f"in_node='{get_sen_node_id(cursor, pattern[2])}'")
 
         subselect_variables = f'{"out_node, " if pattern[0][1:] in pattern_variables else ""}{"type, " if pattern[1][1:] in pattern_variables else ""}{"in_node, " if pattern[2][1:] in pattern_variables else ""}'
         subselect_filters = " AND ".join(pattern_filters)
 
-        subselect = f'(SELECT {subselect_variables[:-2]} FROM sentence_graph_relation WHERE {subselect_filters})'
+        subselect = f'(SELECT {subselect_variables[:-2]} FROM sentence_graph_relation WHERE {subselect_filters})' if pattern[1] != '!rgx' else f"{subselect_filters}"
         pattern_string = f'({", ".join(map(lambda s: f"{s}.id", pattern_variables))}) {"NOT " if pattern[3]=="NOT" else ""}IN {subselect}'
 
         where_clauses.append(pattern_string)
@@ -103,6 +121,114 @@ def build_query(cursor: Cursor, rule: Rule) -> str:
     query = f'{select_statement}\n{from_statement}\n{clause}'
 
     return query
+
+
+def build_and_apply_rules(db, cursor: Cursor, stratas: list[list[Rule]], DEBUG=False):
+
+    strata_morphisms = []
+    for strata in stratas:
+        # print("=======================New Strata=======================")
+        rule_applications_res = None
+        rule_applications_res_old = None
+
+        while rule_applications_res is None or rule_applications_res != rule_applications_res_old:
+
+            rule_applications_res_old = rule_applications_res
+
+            rule_applications_res = loop_over_strata(db, cursor, strata, DEBUG)
+
+            if rule_applications_res is not None:
+                strata_morphisms += rule_applications_res
+                print("app res : ", rule_applications_res)
+                print("app res old : ", rule_applications_res_old)
+    # print(strata_morphisms)
+
+
+def loop_over_strata(db, cursor: Cursor, strata: list[Rule], DEBUG=False):
+
+    morphisms = set()
+
+    for rule in strata:
+
+        morphisms = set()
+        variables = rule.get_frontier()
+
+        triggers_query = build_query(cursor, rule)
+
+        cursor.execute(triggers_query)
+
+        triggers = cursor.fetchall()
+
+        for trigger in triggers:
+            morphisms.add(tuple(zip(variables, trigger)))
+
+        if len(morphisms) != 0:
+            for morphism in morphisms:
+
+                # print("morphisms : ", dict(morphism))
+
+                for atom in rule.head:
+                    morphism_dict = dict(morphism)
+
+                    if atom[3] == "DEL":
+                        cursor.execute(build_delete_query(
+                            cursor, morphism_dict, atom))
+
+                    if atom[3] == "EX":
+                        try:
+                            query = build_insert_query(
+                                cursor, morphism_dict, atom)
+                            # print(query)
+                            cursor.execute(query)
+                        except IntegrityError:
+                            pass
+
+                    db.commit()
+    return morphisms
+
+
+def build_delete_query(cursor: Cursor, morphism: dict[str, int], triplet: tuple[str, str, str, str]) -> str:
+
+    res = "DELETE FROM sentence_graph_relation\nWHERE "
+
+    res += f"out_node = '{morphism[triplet[0]]}'"
+    if (rel := triplet[1]) != "!all":
+        res += f"\nAND type = '{get_reltype_id(cursor, rel)}'"
+    if (var2 := triplet[2]) != "!all":
+        res += f"\nAND in_node = '{get_sen_node_id(cursor, var2)}'"
+
+    return res
+
+
+def build_insert_query(cursor: Cursor, morphism: dict[str, int], triplet: tuple[str, str, str, str]) -> str:
+
+    object = triplet[2]
+    # print("object : ", object)
+    obj_id = object
+    if object.startswith("$"):
+        if object in morphism.keys():
+            obj_id = morphism[object]
+        else:
+            pass
+
+    else:
+        obj_id = get_sen_node_id(cursor, object)
+        if obj_id == "-1":
+            obj_id = get_lowest_available_id(cursor)
+
+            insert_sen_node(cursor, obj_id, object)
+
+    if get_reltype_id(cursor, triplet[1]) == "-1":
+        insert_relation_type(
+            cursor, "100000" + str(get_lowest_available_id(cursor)), triplet[1], "", "", False)
+
+    res = "INSERT INTO sentence_graph_relation\n(id, out_node, type, in_node, weight)\nVALUES("
+
+    res += f"'{get_lowest_available_id(cursor)}', '{morphism[triplet[0]] if triplet[0] in morphism.keys() else -1}', "
+    res += f"'{get_reltype_id(cursor, triplet[1])}', "
+    res += f"'{obj_id}', 1)"
+
+    return res
 
 
 def parse_rules(rule_file) -> list[list[Rule]]:

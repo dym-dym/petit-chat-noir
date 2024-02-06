@@ -2,8 +2,8 @@ import argparse
 from sqlite3 import Cursor
 import sys
 from database.database import create_database, get_connection_and_cursor
-from graph.rules.evaluation import build_query, parse_rules
-from graph.text.parsing import add_compounds, add_relations_from_jdm, find_compound_words, parse_text
+from graph.rules.evaluation import Rule, build_and_apply_rules, build_query, parse_rules
+from graph.text.parsing import add_compounds, add_refl, add_relations_from_jdm, find_compound_words, parse_text
 from jdm.inference import deduction
 from jdm.words import generate_word_graph, lemmatize
 
@@ -53,7 +53,7 @@ def main():
 
     data = ""
 
-    coumpounds = []
+    compounds = []
 
     if args.input is not None:
         with open(args.input, "r") as input_f:
@@ -88,21 +88,19 @@ def main():
 
     relations = set(['r_lemma', 'r_pos'])
 
+    add_refl(cursor)
+
     for relation in relations:
         add_relations_from_jdm(cursor, relation)
 
     print("Applying rules")
 
-    for (i, strata) in enumerate(rules):
-        if True:
-            print(f"======================Strata {i}====================== \n")
-            for rule in strata:
-                print("====================================")
+    build_and_apply_rules(db, cursor, rules)
 
-                print(build_query(cursor, rule))
-                cursor.execute(build_query(cursor, rule))
-                print(cursor.fetchall())
+    # cursor.execute("SELECT * FROM sentence_graph_node")
+    # print(cursor.fetchall())
 
+    # print(rules[0])
     display_graph(cursor)
 
     db.commit()
@@ -111,7 +109,7 @@ def main():
 def display_graph(cursor: Cursor):
     cursor.execute(
         """
-        SELECT sgn1.value, rt.name, sgn2.value, sgr.weight
+        SELECT sgn1.value, rt.name, rt.id, sgn2.value, sgr.weight
         FROM sentence_graph_relation sgr
         JOIN relation_type rt ON sgr.type = rt.id
         JOIN sentence_graph_node sgn1 ON sgr.out_node = sgn1.id

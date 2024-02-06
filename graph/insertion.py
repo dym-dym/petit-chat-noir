@@ -13,13 +13,13 @@ def insert_sen_node(cursor: Cursor, id: int,  value: str):
         pass
 
 
-def insert_sen_rel(cursor: Cursor, out_node: int, in_node: int, type_rel: int, weight: float):
+def insert_sen_rel(cursor: Cursor, id: int, out_node: int, in_node: int, type_rel: int, weight: float):
     try:
         cursor.execute(
             """
-                INSERT INTO sentence_graph_relation (out_node, in_node, type, weight)
-                VALUES (?, ?, ?, ?)
-            """, (out_node, in_node, type_rel, weight)
+                INSERT INTO sentence_graph_relation (id, out_node, in_node, type, weight)
+                VALUES (?, ?, ?, ?, ?)
+            """, (id, out_node, in_node, type_rel, weight)
         )
     except IntegrityError:
         pass

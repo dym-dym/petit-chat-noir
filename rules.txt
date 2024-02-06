@@ -3,8 +3,10 @@
 
 @STRATA 0
 
-#$x r_next $y => $x r_before $y
-#$x r_before $y && $y r_before $z => $x r_before $z
+$x r_succ $y => $x r_before $y
+
+@STRATA 0.5
+$x r_before $y && $y r_before $z => $x r_before $z
 
 
 
@@ -14,62 +16,62 @@
 
 
 # Verb negation
-$n r_word ne && $n r_pos Adv:Neg && $n r_next $v && $v r_pos Ver:Conjug => !del $n r_pos Nom: && $v r_pos Ver:Neg
-$n r_word ne && $n r_pos Adv:Neg && $n r_next $p && $p r_word $pword && $pword !rgx ^(pas|point)$ && $p r_next $v && $v r_pos Ver:Inf => !del $n r_pos Nom: && $v r_pos Ver:Neg
-$v r_pos Ver:Neg && $v r_next $p && $p r_word $pword && $pword !rgx ^(pas|point)$ && $p r_pos $ptype && $ptype !rgx ^(Nom:|Det:|Ver:|Pro:|Adj:) => !del $p r_pos $ptype
+$n r_word ne && $n r_pos Adv:Neg && $n r_succ $v && $v r_pos Ver:Conjug => !del $n r_pos Nom: && $v r_pos Ver:Neg
+$n r_word ne && $n r_pos Adv:Neg && $n r_succ $p && $p r_word $pword && $pword !rgx ^(pas|point)$ && $p r_succ $v && $v r_pos Ver:Inf => !del $n r_pos Nom: && $v r_pos Ver:Neg
+$v r_pos Ver:Neg && $v r_succ $p && $p r_word $pword && $pword !rgx ^(pas|point)$ && $p r_pos $ptype && $ptype !rgx ^(Nom:|Det:|Ver:|Pro:|Adj:) => !del $p r_pos $ptype
 
 # Specific rules
 # Det vs Nom
 #$x r_pos Nom: && $x r_pos $xtype && $xtype !rgx ^Det: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Det: && $r2 r_relpred r_pos && $r2 r_relweight $wxdet && $wxdet < $wxnom => !del $x r_pos $xtype
 $x r_pos Det: && $x r_pos $xtype && $xtype !rgx ^Nom: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Det: && $r2 r_relpred r_pos && $r2 r_relweight $wxdet && $wxdet > $wxnom => !del $x r_pos $xtype
 $x r_word du && $x r_pos $y && $y !rgx Adj: => !del $x r_pos $y
-$x r_word de && $x r_pos $xtype && $xtype !rgx ^(Nom:|Ver:|Adj:|Pro:) && $x r_next $y && $y r_word la && $y r_pos $ytype && $ytype !rgx ^(Nom:|Ver:|Adj:) => !del $x r_pos $ytype && !del $y r_pos $ytype
+$x r_word de && $x r_pos $xtype && $xtype !rgx ^(Nom:|Ver:|Adj:|Pro:) && $x r_succ $y && $y r_word la && $y r_pos $ytype && $ytype !rgx ^(Nom:|Ver:|Adj:) => !del $x r_pos $ytype && !del $y r_pos $ytype
 
 # Passé composé
 $x r_word a && $x r_pos $xtype && $xtype !rgx ^(Nom:|Det:|Adj:|Pro:) => !del $x r_pos $xtype
-$x r_lemma avoir && $x r_pos Ver: && $x r_next $y && $y r_pos Ver:PPas && $y r_pos $ytype && $ytype !rgx ^(Nom:|Det:|Adj:|Pro:) => $x r_pos Ver:Aux && !del $y r_pos $ytype && !del $x r_pos Ver:
+$x r_lemma avoir && $x r_pos Ver: && $x r_succ $y && $y r_pos Ver:PPas && $y r_pos $ytype && $ytype !rgx ^(Nom:|Det:|Adj:|Pro:) => $x r_pos Ver:Aux && !del $y r_pos $ytype && !del $x r_pos Ver:
 
 # Etre
 $x r_lemma être && $x r_pos Ver:Conjug && $x r_pos $xtype && $xtype !rgx ^(Nom:|Det:|Adj:|Pro:) => !del $x r_pos $xtype
 
 #
-$pp r_pos Ver:PPas && $pp r_pos Adj: && $x r_next $pp && !not $x r_pos Ver: && $pp r_pos $pptype && $pptype !rgx ^Ver: => !del $pp r_pos $pptype
+$pp r_pos Ver:PPas && $pp r_pos Adj: && $x r_succ $pp && !not $x r_pos Ver: && $pp r_pos $pptype && $pptype !rgx ^Ver: => !del $pp r_pos $pptype
 
 # Pronom Pers/Det
-$x r_pos Pro:Pers && $x r_next $y && $y r_pos Ver: && !not $y r_pos Nom: && !not $y r_pos Adj: && $x r_pos $d && $d !rgx ^(Det:|Nom:|Adj:) => !del $x r_pos $d
-$x r_pos Pro:Pers && $x r_next $y && $y r_pos Nom: && !not $y r_pos Ver: && $x r_pos $p && $p !rgx ^(Pro:|Nom:|Adj:) => !del $x r_pos $p
-$x r_pos Pro:Pers && $x r_next $y && $y r_pos Adj: && !not $y r_pos Ver: && $x r_pos $p && $p !rgx ^(Pro:|Nom:|Adj:) => !del $x r_pos $p
+$x r_pos Pro:Pers && $x r_succ $y && $y r_pos Ver: && !not $y r_pos Nom: && !not $y r_pos Adj: && $x r_pos $d && $d !rgx ^(Det:|Nom:|Adj:) => !del $x r_pos $d
+$x r_pos Pro:Pers && $x r_succ $y && $y r_pos Nom: && !not $y r_pos Ver: && $x r_pos $p && $p !rgx ^(Pro:|Nom:|Adj:) => !del $x r_pos $p
+$x r_pos Pro:Pers && $x r_succ $y && $y r_pos Adj: && !not $y r_pos Ver: && $x r_pos $p && $p !rgx ^(Pro:|Nom:|Adj:) => !del $x r_pos $p
 
 
 # Nom exclusif + Adjectif-Nom
-$x r_pos Nom: && !not $x r_pos Adj: && !not $x r_pos Ver: && $x r_next $y && $y r_pos Adj: && $y r_pos $ytype && $ytype !rgx ^Nom: => !del $y r_pos $ytype
-$x r_pos Nom: && !not $x r_pos Adj: && !not $x r_pos Ver: && $y r_next $x && $y r_pos Adj: && $y r_pos $ytype && $ytype !rgx ^Nom: => !del $y r_pos $ytype
+$x r_pos Nom: && !not $x r_pos Adj: && !not $x r_pos Ver: && $x r_succ $y && $y r_pos Adj: && $y r_pos $ytype && $ytype !rgx ^Nom: => !del $y r_pos $ytype
+$x r_pos Nom: && !not $x r_pos Adj: && !not $x r_pos Ver: && $y r_succ $x && $y r_pos Adj: && $y r_pos $ytype && $ytype !rgx ^Nom: => !del $y r_pos $ytype
 
 # Nom exclusif + Verbe-Nom
-$x r_pos Nom: && !not $x r_pos Adj: && !not $x r_pos Ver: && $x r_next $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: => !del $y r_pos $ytype
-$x r_pos Nom: && !not $x r_pos Adj: && !not $x r_pos Ver: && $y r_next $x && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: => !del $y r_pos $ytype
+$x r_pos Nom: && !not $x r_pos Adj: && !not $x r_pos Ver: && $x r_succ $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: => !del $y r_pos $ytype
+$x r_pos Nom: && !not $x r_pos Adj: && !not $x r_pos Ver: && $y r_succ $x && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: => !del $y r_pos $ytype
 
 # Adj + Verbe/Nom avec genre/nombre différent
-$x r_pos Adj: && $x r_next $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: && $x r_pos $xnumber && $y r_pos $ynumber && $xnumber !rgx ^Number:Sing && $ynumber !rgx ^Number:Plur => !del $y r_pos $ytype
-$x r_pos Adj: && $x r_next $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: && $x r_pos $xnumber && $y r_pos $ynumber && $ynumber !rgx ^Number:Sing && $xnumber !rgx ^Number:Plur => !del $y r_pos $ytype
-$x r_pos Adj: && $x r_next $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: && $x r_pos $xgender && $y r_pos $ygender && $xgender !rgx ^Gender:Mas && $ygender !rgx ^Gender:Fem => !del $y r_pos $ytype
-$x r_pos Adj: && $x r_next $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: && $x r_pos $xgender && $y r_pos $ygender && $xgender !rgx ^Gender:Fem && $ygender !rgx ^Gender:Mas => !del $y r_pos $ytype
+$x r_pos Adj: && $x r_succ $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: && $x r_pos $xnumber && $y r_pos $ynumber && $xnumber !rgx ^Number:Sing && $ynumber !rgx ^Number:Plur => !del $y r_pos $ytype
+$x r_pos Adj: && $x r_succ $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: && $x r_pos $xnumber && $y r_pos $ynumber && $ynumber !rgx ^Number:Sing && $xnumber !rgx ^Number:Plur => !del $y r_pos $ytype
+$x r_pos Adj: && $x r_succ $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: && $x r_pos $xgender && $y r_pos $ygender && $xgender !rgx ^Gender:Mas && $ygender !rgx ^Gender:Fem => !del $y r_pos $ytype
+$x r_pos Adj: && $x r_succ $y && $y r_pos Ver:Conjug && $y r_pos $ytype && $ytype !rgx ^Nom: && $x r_pos $xgender && $y r_pos $ygender && $xgender !rgx ^Gender:Fem && $ygender !rgx ^Gender:Mas => !del $y r_pos $ytype
 
 
 #Ver/Nom + Ver:Conjug
-$x r_pos Nom: && $x r_pos Ver:Conjug && $x r_pos $xtype && $xtype !rgx ^Ver: && $x r_next $y && $y r_pos Ver:Conjug => !del $x r_pos $xtype
+$x r_pos Nom: && $x r_pos Ver:Conjug && $x r_pos $xtype && $xtype !rgx ^Ver: && $x r_succ $y && $y r_pos Ver:Conjug => !del $x r_pos $xtype
 
 # Nom/Adj seul dans un GN (hors être avant)
-$x r_pos Nom: && $x r_pos $xtype && $xtype !rgx ^Adj: && $p r_next $x && $x r_next $n && !not $p r_pos Nom: && !not $p r_pos Ukn: && !not $p r_lemma être && !not $p r_pos Adj: && !not $n r_pos Nom: && !not $n r_pos Adj: => !del $x r_pos $xtype
+$x r_pos Nom: && $x r_pos $xtype && $xtype !rgx ^Adj: && $p r_succ $x && $x r_succ $n && !not $p r_pos Nom: && !not $p r_pos Ukn: && !not $p r_lemma être && !not $p r_pos Adj: && !not $n r_pos Nom: && !not $n r_pos Adj: => !del $x r_pos $xtype
 
 
 @STRATA 1.5
 
 # Nom>Adj + Adj>Nom = Nom + Adj, et inversement 
-$x r_pos Nom: && $x r_pos $xtype && $xtype !rgx ^Adj: && $x r_next $y && $y r_pos $ytype && $ytype !rgx ^Nom:  && $y r_pos Adj: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Adj: && $r2 r_relpred r_pos && $r2 r_relweight $wxadj && $wxadj < $wxnom && $ry r_relsubj $y && $ry r_relobj Nom: && $ry r_relpred r_pos && $ry r_relweight $wynom && $ry2 r_relsubj $x && $ry2 r_relobj Adj: && $ry2 r_relpred r_pos && $ry2 r_relweight $wyadj && $wynom < $wyadj => !del $y r_pos $ytype && !del $x r_pos $xtype
-$x r_pos Nom: && $x r_pos $xtype && $xtype !rgx ^Adj: && $y r_next $x && $y r_pos $ytype && $ytype !rgx ^Nom:  && $y r_pos Adj: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Adj: && $r2 r_relpred r_pos && $r2 r_relweight $wxadj && $wxadj < $wxnom && $ry r_relsubj $y && $ry r_relobj Nom: && $ry r_relpred r_pos && $ry r_relweight $wynom && $ry2 r_relsubj $x && $ry2 r_relobj Adj: && $ry2 r_relpred r_pos && $ry2 r_relweight $wyadj && $wynom < $wyadj => !del $y r_pos $ytype && !del $x r_pos $xtype
-$x r_pos Adj: && $x r_pos $xtype && $xtype !rgx ^Nom: && $x r_next $y && $y r_pos $ytype && $ytype !rgx ^Adj:  && $y r_pos Nom: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Adj: && $r2 r_relpred r_pos && $r2 r_relweight $wxadj && $wxadj > $wxnom && $ry r_relsubj $y && $ry r_relobj Nom: && $ry r_relpred r_pos && $ry r_relweight $wynom && $ry2 r_relsubj $x && $ry2 r_relobj Adj: && $ry2 r_relpred r_pos && $ry2 r_relweight $wyadj && $wynom > $wyadj => !del $y r_pos $ytype && !del $x r_pos $xtype
-$x r_pos Adj: && $x r_pos $xtype && $xtype !rgx ^Nom: && $y r_next $x && $y r_pos $ytype && $ytype !rgx ^Adj:  && $y r_pos Nom: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Adj: && $r2 r_relpred r_pos && $r2 r_relweight $wxadj && $wxadj > $wxnom && $ry r_relsubj $y && $ry r_relobj Nom: && $ry r_relpred r_pos && $ry r_relweight $wynom && $ry2 r_relsubj $x && $ry2 r_relobj Adj: && $ry2 r_relpred r_pos && $ry2 r_relweight $wyadj && $wynom > $wyadj => !del $y r_pos $ytype && !del $x r_pos $xtype
+$x r_pos Nom: && $x r_pos $xtype && $xtype !rgx ^Adj: && $x r_succ $y && $y r_pos $ytype && $ytype !rgx ^Nom:  && $y r_pos Adj: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Adj: && $r2 r_relpred r_pos && $r2 r_relweight $wxadj && $wxadj < $wxnom && $ry r_relsubj $y && $ry r_relobj Nom: && $ry r_relpred r_pos && $ry r_relweight $wynom && $ry2 r_relsubj $x && $ry2 r_relobj Adj: && $ry2 r_relpred r_pos && $ry2 r_relweight $wyadj && $wynom < $wyadj => !del $y r_pos $ytype && !del $x r_pos $xtype
+$x r_pos Nom: && $x r_pos $xtype && $xtype !rgx ^Adj: && $y r_succ $x && $y r_pos $ytype && $ytype !rgx ^Nom:  && $y r_pos Adj: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Adj: && $r2 r_relpred r_pos && $r2 r_relweight $wxadj && $wxadj < $wxnom && $ry r_relsubj $y && $ry r_relobj Nom: && $ry r_relpred r_pos && $ry r_relweight $wynom && $ry2 r_relsubj $x && $ry2 r_relobj Adj: && $ry2 r_relpred r_pos && $ry2 r_relweight $wyadj && $wynom < $wyadj => !del $y r_pos $ytype && !del $x r_pos $xtype
+$x r_pos Adj: && $x r_pos $xtype && $xtype !rgx ^Nom: && $x r_succ $y && $y r_pos $ytype && $ytype !rgx ^Adj:  && $y r_pos Nom: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Adj: && $r2 r_relpred r_pos && $r2 r_relweight $wxadj && $wxadj > $wxnom && $ry r_relsubj $y && $ry r_relobj Nom: && $ry r_relpred r_pos && $ry r_relweight $wynom && $ry2 r_relsubj $x && $ry2 r_relobj Adj: && $ry2 r_relpred r_pos && $ry2 r_relweight $wyadj && $wynom > $wyadj => !del $y r_pos $ytype && !del $x r_pos $xtype
+$x r_pos Adj: && $x r_pos $xtype && $xtype !rgx ^Nom: && $y r_succ $x && $y r_pos $ytype && $ytype !rgx ^Adj:  && $y r_pos Nom: && $r r_relsubj $x && $r r_relobj Nom: && $r r_relpred r_pos && $r r_relweight $wxnom && $r2 r_relsubj $x && $r2 r_relobj Adj: && $r2 r_relpred r_pos && $r2 r_relweight $wxadj && $wxadj > $wxnom && $ry r_relsubj $y && $ry r_relobj Nom: && $ry r_relpred r_pos && $ry r_relweight $wynom && $ry2 r_relsubj $x && $ry2 r_relobj Adj: && $ry2 r_relpred r_pos && $ry2 r_relweight $wyadj && $wynom > $wyadj => !del $y r_pos $ytype && !del $x r_pos $xtype
 
 
 @STRATA 1.9
@@ -100,25 +102,25 @@ $x r_pos Adj: && $x r_pos $xtype && $xtype !rgx ^Det: && $r r_relsubj $x && $r r
 # Base case
 $x r_pos Adj: && !not $x r_pos Nom: && !not $x r_pos Adj:Pos && !not $x r_pos Det: && $x r_pos $number && $number !rgx ^Number: && $x r_pos $gender && $gender !rgx ^Gender: => $z r_pos Adjx: && $z r_pos $gender && $z r_pos $number && $z r_adjx_part $x && $z r_adjx_first $x && $z r_adjx_last $x
 # Associative right
-$x r_pos Adjx: && $x r_adjx_last $xl && $x r_adjx_first $xf && $xl r_next $yf && $y r_pos Adjx: && $y r_adjx_first $yf && $y r_adjx_last $yl && $x r_adjx_part $a && $y r_adjx_part $b && $x r_pos $number && $y r_pos $number && $number !rgx ^Number: && $x r_pos $gender && $y r_pos $gender && $gender !rgx ^Gender: => $z r_pos Adjx: && $z r_pos $number && $z r_pos $gender && $z r_adjx_part $a && $z r_adjx_part $b && $z r_adjx_first $xf && $z r_adjx_last $yl && !del $x !all !all && !del $y !all !all
+$x r_pos Adjx: && $x r_adjx_last $xl && $x r_adjx_first $xf && $xl r_succ $yf && $y r_pos Adjx: && $y r_adjx_first $yf && $y r_adjx_last $yl && $x r_adjx_part $a && $y r_adjx_part $b && $x r_pos $number && $y r_pos $number && $number !rgx ^Number: && $x r_pos $gender && $y r_pos $gender && $gender !rgx ^Gender: => $z r_pos Adjx: && $z r_pos $number && $z r_pos $gender && $z r_adjx_part $a && $z r_adjx_part $b && $z r_adjx_first $xf && $z r_adjx_last $yl && !del $x !all !all && !del $y !all !all
 # Associative left
-$x r_pos Adjx: && $x r_adjx_last $xl && $x r_adjx_first $xf && $xl r_next $c && $c r_next $yf && $c r_pos Conj:Coord && $y r_pos Adjx: && $y r_adjx_first $yf && $y r_adjx_last $yl && $x r_adjx_part $a && $y r_adjx_part $b && $x r_pos $number && $y r_pos $number && $number !rgx ^Number: && $x r_pos $gender && $y r_pos $gender && $gender !rgx ^Gender: => $z r_pos Adjx: && $z r_pos $number  && $z r_pos $gender && $z r_adjx_part $a && $z r_adjx_part $b && $z r_adjx_first $xf && $z r_adjx_last $yl && !del $x !all !all && !del $y !all !all
+$x r_pos Adjx: && $x r_adjx_last $xl && $x r_adjx_first $xf && $xl r_succ $c && $c r_succ $yf && $c r_pos Conj:Coord && $y r_pos Adjx: && $y r_adjx_first $yf && $y r_adjx_last $yl && $x r_adjx_part $a && $y r_adjx_part $b && $x r_pos $number && $y r_pos $number && $number !rgx ^Number: && $x r_pos $gender && $y r_pos $gender && $gender !rgx ^Gender: => $z r_pos Adjx: && $z r_pos $number  && $z r_pos $gender && $z r_adjx_part $a && $z r_adjx_part $b && $z r_adjx_first $xf && $z r_adjx_last $yl && !del $x !all !all && !del $y !all !all
 
 
 # GV construction
 $v r_pos Ver:Conjug && !not $v r_pos Nom: && !not $v r_pos Ver:Aux => $z r_pos GV: && $z r_gv_core $v && $z r_gv_first $v && $z r_gv_last $v
-$aux r_pos Ver:Aux && $aux r_next $v && $v r_pos Ver:PPas && !not $v r_pos Nom: && !not $v r_pos Ver:Aux => $z r_pos GV: && $z r_gv_core $v && $z r_gv_first $aux && $z r_gv_last $v
+$aux r_pos Ver:Aux && $aux r_succ $v && $v r_pos Ver:PPas && !not $v r_pos Nom: && !not $v r_pos Ver:Aux => $z r_pos GV: && $z r_gv_core $v && $z r_gv_first $aux && $z r_gv_last $v
 
-$aux r_pos Ver:Aux && $aux r_next $gvf && $gv r_gv_first $gvf && $gv r_gv_last $gvl && $gv r_gv_core $gvcore => $z r_pos GV: && $z r_gv_core $gvcore && $z r_gv_first $aux && $z r_gv_last $gvl && !del $gv !all !all
-$neg r_pos Adv:Neg && $neg r_next $gvf && $gv r_gv_first $gvf && $gv r_gv_last $gvl && $gv r_gv_core $gvcore => $z r_pos GV: && $z r_pos GV:Neg && $z r_gv_core $gvcore && $z r_gv_first $neg && $z r_gv_last $gvl && !del $gv !all !all
+$aux r_pos Ver:Aux && $aux r_succ $gvf && $gv r_gv_first $gvf && $gv r_gv_last $gvl && $gv r_gv_core $gvcore => $z r_pos GV: && $z r_gv_core $gvcore && $z r_gv_first $aux && $z r_gv_last $gvl && !del $gv !all !all
+$neg r_pos Adv:Neg && $neg r_succ $gvf && $gv r_gv_first $gvf && $gv r_gv_last $gvl && $gv r_gv_core $gvcore => $z r_pos GV: && $z r_pos GV:Neg && $z r_gv_core $gvcore && $z r_gv_first $neg && $z r_gv_last $gvl && !del $gv !all !all
 
 
 
 @STRATA 3
 
 # Nom + Adjectifs => GN simple
-$x r_pos Nom: && $x r_next $yf && $y r_pos Adjx: && $y r_adjx_first $yf && $y r_adjx_last $yl && $x r_pos $number && $x r_pos $gender && $y r_pos $number && $y r_pos $gender && $number !rgx ^Number: && $gender !rgx ^Gender: => $z r_pos GN:Bare && $z r_pos $gender && $z r_pos $number && $z r_gncore $x && $z r_gn_first $x && $z r_gn_last $yl && $z r_gnpart $y
-$x r_pos Nom: && $yl r_next $x && $y r_pos Adjx: && $y r_adjx_first $yf && $y r_adjx_last $yl && $x r_pos $number && $x r_pos $gender && $y r_pos $number && $y r_pos $gender && $number !rgx ^Number: && $gender !rgx ^Gender: => $z r_pos GN:Bare && $z r_pos $gender && $z r_pos $number && $z r_gncore $x && $z r_gn_first $yf && $z r_gn_last $x && $z r_gnpart $y
+$x r_pos Nom: && $x r_succ $yf && $y r_pos Adjx: && $y r_adjx_first $yf && $y r_adjx_last $yl && $x r_pos $number && $x r_pos $gender && $y r_pos $number && $y r_pos $gender && $number !rgx ^Number: && $gender !rgx ^Gender: => $z r_pos GN:Bare && $z r_pos $gender && $z r_pos $number && $z r_gncore $x && $z r_gn_first $x && $z r_gn_last $yl && $z r_gnpart $y
+$x r_pos Nom: && $yl r_succ $x && $y r_pos Adjx: && $y r_adjx_first $yf && $y r_adjx_last $yl && $x r_pos $number && $x r_pos $gender && $y r_pos $number && $y r_pos $gender && $number !rgx ^Number: && $gender !rgx ^Gender: => $z r_pos GN:Bare && $z r_pos $gender && $z r_pos $number && $z r_gncore $x && $z r_gn_first $yf && $z r_gn_last $x && $z r_gnpart $y
 
 # Adjectif dans GN simple => Adjectif qualifie le nom du GN
 $gn r_pos $gntype && $gntype !rgx ^GN: && $gn r_gncore $x && $gn r_gnpart $y && $y r_adjx_part $adj => $adj r_qualify $x
@@ -136,27 +138,27 @@ $x r_pos Pro:Pers:SUJ && !not $gn r_gncore $x && !not $gn2 r_gnpart $x && $x r_p
 @STRATA 3.5
 
 # Déterminant + GN simple => GN
-$x r_pos Det: && $x r_word $xw && $xw !rgx ^(le|la|les|un|une)$ && !not $x r_pos Pre: && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Det && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
-$x r_pos Det: && $x r_word $xw && $xw !rgx ^(le|la|les|un|une)$ && !not $x r_pos Pre: && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && !not $gn r_gnpart $gnp => $z r_pos GN:Det && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Det: && $x r_word $xw && $xw !rgx ^(le|la|les|un|une)$ && !not $x r_pos Pre: && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Det && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Det: && $x r_word $xw && $xw !rgx ^(le|la|les|un|une)$ && !not $x r_pos Pre: && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && !not $gn r_gnpart $gnp => $z r_pos GN:Det && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
 
 # Cas où "de" est un déterminant non génitif
-$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_next $x && !not $prev r_pos Adj: && !not $prev r_pos Nom: && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Det && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
-$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_next $x && !not $prev r_pos Adj: && !not $prev r_pos Nom: && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && !not $gn r_gnpart $gnp => $z r_pos GN:Det && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_succ $x && !not $prev r_pos Adj: && !not $prev r_pos Nom: && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Det && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_succ $x && !not $prev r_pos Adj: && !not $prev r_pos Nom: && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && !not $gn r_gnpart $gnp => $z r_pos GN:Det && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
 
 # Marqueur de génitif
-$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_next $x && $prev r_pos Nom: && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Gen && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
-$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_next $x && $prev r_pos Nom: && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && !not $gn r_gnpart $gnp => $z r_pos GN:Gen && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
-$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_next $x && $prev r_pos Adj: && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Gen && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
-$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_next $x && $prev r_pos Adj: && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && !not $gn r_gnpart $gnp => $z r_pos GN:Gen && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_succ $x && $prev r_pos Nom: && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Gen && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_succ $x && $prev r_pos Nom: && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && !not $gn r_gnpart $gnp => $z r_pos GN:Gen && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_succ $x && $prev r_pos Adj: && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Gen && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Det: && $x r_word $xw && $xw !rgx ^(de|du|des)$ && $prev r_succ $x && $prev r_pos Adj: && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && !not $gn r_gnpart $gnp => $z r_pos GN:Gen && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
 
 
 # "à/au/aux" + GN => GN:Pre:A
-$x r_pos Pre: && $x r_word $xw && $xw !rgx ^(à|au|aux)$ && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl => $z r_pos GN:Pre:A && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
-$x r_pos Pre: && $x r_word $xw && $xw !rgx ^(à|au|aux)$ && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Pre:A && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Pre: && $x r_word $xw && $xw !rgx ^(à|au|aux)$ && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl => $z r_pos GN:Pre:A && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Pre: && $x r_word $xw && $xw !rgx ^(à|au|aux)$ && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Pre:A && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
 
 # Generic GN:Pre
-$x r_pos Pre: && !not $x r_pos Det: && $x r_word $xw && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl => $z r_pos GN:Pre: && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
-$x r_pos Pre: && !not $x r_pos Det: && $x r_word $xw && $x r_next $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Pre: && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Pre: && !not $x r_pos Det: && $x r_word $xw && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl => $z r_pos GN:Pre: && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
+$x r_pos Pre: && !not $x r_pos Det: && $x r_word $xw && $x r_succ $gnf && $gn r_gn_first $gnf && $gn r_gncore $core && $gn r_gn_last $gnl && $gn r_gnpart $gnp => $z r_pos GN:Pre: && $z r_gnpart $gnp && $z r_gncore $core && $z r_gn_first $x && $z r_gn_last $gnl && !del $gn !all !all
 
 
 
@@ -164,44 +166,44 @@ $x r_pos Pre: && !not $x r_pos Det: && $x r_word $xw && $x r_next $gnf && $gn r_
 @STRATA 4
 
 # GN: + GN:Gen = GN: 
-$gn r_gn_last $gnl && $gn r_gn_first $gnf && $gn r_pos $gntype && $gnl r_next $gn2f && $gn2 r_pos GN:Gen && $gn2 r_gn_first $gn2f && $gn2 r_gn_last $gn2l && $gn r_gncore $core && $gn2 r_gncore $core2 => $core r_genitif $core2 && $z r_pos $gntype && $z r_gncore $core && $z r_gn_first $gnf && $z r_gn_last $gn2l && !del $gn !all !all && !del $gn2 !all !all
+$gn r_gn_last $gnl && $gn r_gn_first $gnf && $gn r_pos $gntype && $gnl r_succ $gn2f && $gn2 r_pos GN:Gen && $gn2 r_gn_first $gn2f && $gn2 r_gn_last $gn2l && $gn r_gncore $core && $gn2 r_gncore $core2 => $core r_genitif $core2 && $z r_pos $gntype && $z r_gncore $core && $z r_gn_first $gnf && $z r_gn_last $gn2l && !del $gn !all !all && !del $gn2 !all !all
 
 
 @STRATA 5
 
 # GN + Verbe => GN sujet de Verbe
-$gv r_pos GV: && $gv r_gv_first $gvf && $gn r_pos $gntype && $gntype !rgx ^GN:(Det|Pro) && $gn r_gn_last $gnl && $gnl r_next $gvf => $gv r_subject $gn
+$gv r_pos GV: && $gv r_gv_first $gvf && $gn r_pos $gntype && $gntype !rgx ^GN:(Det|Pro) && $gn r_gn_last $gnl && $gnl r_succ $gvf => $gv r_subject $gn
 
 # Verbe + GN => GN objet de Verbe
-$gv r_pos GV: && $gv r_gv_last $gvl && $gn r_pos $gntype && $gntype !rgx ^GN:(Det|Pro) && $gn r_gn_first $gnf && $gvl r_next $gnf => $gv r_object_direct $gn
+$gv r_pos GV: && $gv r_gv_last $gvl && $gn r_pos $gntype && $gntype !rgx ^GN:(Det|Pro) && $gn r_gn_first $gnf && $gvl r_succ $gnf => $gv r_object_direct $gn
 
 # Verbe être + Adjx => Caractérisation
-$gv r_pos GV: && $gv r_gv_last $gvl && $adjx r_pos Adjx: && $adjx r_adjx_first $adjf && $gvl r_next $adjf => $gv r_qualifier $adjx
+$gv r_pos GV: && $gv r_gv_last $gvl && $adjx r_pos Adjx: && $adjx r_adjx_first $adjf && $gvl r_succ $adjf => $gv r_qualifier $adjx
 
 
 # Verbe + (GNs) + GN:Pre:A => GN complément de Verbe
-$gv r_pos GV: && $gv r_gv_last $gvl && $gn r_pos $gntype && $gntype !rgx ^GN:Pre: && $gn r_gn_first $gnf && $gvl r_next $gnf => $gv r_complement $gn
-$gv r_pos GV: && $gv r_object_direct $gno && $gno r_gn_last $gnol && $gn r_pos $gntype && $gntype !rgx ^GN:Pre: && $gn r_gn_first $gnf && $gnol r_next $gnf => $gv r_complement $gn
-$gv r_pos GV: && $gv r_complement $gnc && $gnc r_gn_last $gncl && $gncl r_next $gnf && $gn r_pos $gntype && $gntype !rgx ^GN:Pre: && $gn r_gn_first $gnf => $gv r_complement $gn
+$gv r_pos GV: && $gv r_gv_last $gvl && $gn r_pos $gntype && $gntype !rgx ^GN:Pre: && $gn r_gn_first $gnf && $gvl r_succ $gnf => $gv r_complement $gn
+$gv r_pos GV: && $gv r_object_direct $gno && $gno r_gn_last $gnol && $gn r_pos $gntype && $gntype !rgx ^GN:Pre: && $gn r_gn_first $gnf && $gnol r_succ $gnf => $gv r_complement $gn
+$gv r_pos GV: && $gv r_complement $gnc && $gnc r_gn_last $gncl && $gncl r_succ $gnf && $gn r_pos $gntype && $gntype !rgx ^GN:Pre: && $gn r_gn_first $gnf => $gv r_complement $gn
 
 
 @STRATA 6
 
 # GN + Verbe => GN sujet de Verbe => Nom du GN r_agent-1 Verbe
-#$v r_pos Ver: && !not $x r_pos Ver:Aux && !not $v r_pos Ver:PPas && $gnl r_next $v && $v r_lemma $vl && $gn r_gn_last $gnl && $gn r_gncore $core && $core r_lemma $corel => $corel r_agent-1 $vl
-#$x r_pos Ver:Aux && $x r_next $v && $v r_pos Ver:PPas && $v r_pos Ver: && $gnl r_next $x && $v r_lemma $vl && $gn r_gn_last $gnl && $gn r_gncore $core && $core r_lemma $corel => $corel r_agent-1 $vl
+#$v r_pos Ver: && !not $x r_pos Ver:Aux && !not $v r_pos Ver:PPas && $gnl r_succ $v && $v r_lemma $vl && $gn r_gn_last $gnl && $gn r_gncore $core && $core r_lemma $corel => $corel r_agent-1 $vl
+#$x r_pos Ver:Aux && $x r_succ $v && $v r_pos Ver:PPas && $v r_pos Ver: && $gnl r_succ $x && $v r_lemma $vl && $gn r_gn_last $gnl && $gn r_gncore $core && $core r_lemma $corel => $corel r_agent-1 $vl
 $gv r_subject $gn && !not $gv r_pos GV:Neg && $gn r_gncore $gncore && $gncore r_word $gncorew && $gv r_gv_core $gvcore && $gvcore r_lemma $gvcorel && !not $gvcore r_lemma être => $gncorew r_agent-1 $gvcorel
 $gv r_subject $gn && $gv r_pos GV:Neg && $gn r_gncore $gncore && $gncore r_word $gncorew && $gv r_gv_core $gvcore && $gvcore r_lemma $gvcorel && !not $gvcore r_lemma être => $gncorew r_agent-1_neg $gvcorel
 
 
 # Same, with negation
-$v r_pos Ver:Neg && !not $x r_pos Ver:Aux && !not $v r_pos Ver:PPas && $gnl r_next $n && $n r_pos Adv:Neg && $n r_next $v && $v r_lemma $vl && $gn r_gn_last $gnl && $gn r_gncore $core && $core r_lemma $corel => $corel r_agent-1_neg $vl
+$v r_pos Ver:Neg && !not $x r_pos Ver:Aux && !not $v r_pos Ver:PPas && $gnl r_succ $n && $n r_pos Adv:Neg && $n r_succ $v && $v r_lemma $vl && $gn r_gn_last $gnl && $gn r_gncore $core && $core r_lemma $corel => $corel r_agent-1_neg $vl
 
 
 # Verbe + GN => GN objet de Verbe => Nom du GN r_patient Verbe
 # No Negative Case !! => X ne V pas Y != Y n'est pas V
-#$v r_pos Ver: && !not $x r_pos Ver:Aux && $v r_next $gnf && $v r_lemma $vl && $gn r_gn_first $gnf && $gn r_gncore $core && $core r_lemma $corel && !not $corel r_lemma_pos Ver:Inf => $corel r_patient $vl
-#$x r_pos Ver:Aux && $x r_next $v && $v r_pos Ver:PPas && $v r_pos Ver: && $v r_next $gnf && $v r_lemma $vl && $gn r_gn_first $gnf && $gn r_gncore $core && $core r_lemma $corel && !not $corel r_lemma_pos Ver:Inf => $corel r_patient $vl
+#$v r_pos Ver: && !not $x r_pos Ver:Aux && $v r_succ $gnf && $v r_lemma $vl && $gn r_gn_first $gnf && $gn r_gncore $core && $core r_lemma $corel && !not $corel r_lemma_pos Ver:Inf => $corel r_patient $vl
+#$x r_pos Ver:Aux && $x r_succ $v && $v r_pos Ver:PPas && $v r_pos Ver: && $v r_succ $gnf && $v r_lemma $vl && $gn r_gn_first $gnf && $gn r_gncore $core && $core r_lemma $corel && !not $corel r_lemma_pos Ver:Inf => $corel r_patient $vl
 $gv r_object_direct $gn && !not $gv r_pos GV:Neg && $gn r_gncore $gncore && $gncore r_word $gncorew && $gv r_gv_core $gvcore && $gvcore r_lemma $gvcorel && !not $gvcore r_lemma être => $gvcorel r_patient $gncorew
 $gv r_object_direct $gn && !not $gv r_pos GV:Neg && $gn r_gncore $gncore && $gncore r_word $gncorew && $gv r_subject $gsubj && $gsubj r_gncore $gsubjcore && $gsubjcore r_word $gsubjcorew && $gv r_gv_core $gvcore && $gvcore r_lemma être => $gsubjcorew r_isa $gncorew
 

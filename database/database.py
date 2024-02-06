@@ -76,7 +76,7 @@ def create_database(cursor: Cursor):
     cursor.execute("""CREATE TABLE
                         sentence_graph_relation
                             (
-                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                id INTEGER,
                                 out_node NUMBER,
                                 in_node NUMBER,
                                 type NUMBER,
@@ -90,6 +90,8 @@ def create_database(cursor: Cursor):
                                 CONSTRAINT fk_sentence_relation_type
                                     FOREIGN KEY (type)
                                     REFERENCES relation_type(id)
+                                CONSTRAINT pk_sgr
+                                    PRIMARY KEY (out_node, in_node, type)
                             )
                   """)
 
