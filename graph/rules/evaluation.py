@@ -93,15 +93,24 @@ def build_query(cursor: Cursor, rule: Rule) -> str:
             pattern_constants.append(pattern[2])
             if pattern[1] == '!rgx':
 
-                split_pattern = pattern[2].replace(
-                    "^(", "").replace(")", "").replace("$", "").split("|")
-                or_clause = "("
+                clean_pattern = pattern[2].replace(
+                    "^(", "").replace("^", "").replace(")", "").replace("$", "")
 
-                for elem in split_pattern:
-                    or_clause += f"'{get_sen_node_id(cursor, elem)}', "
+                if "|" in pattern[2]:
 
-                or_clause = or_clause[:-2] + ")"
-                pattern_filters.append(or_clause)
+                    split_pattern = clean_pattern.split("|")
+                    or_clause = "("
+
+                    for elem in split_pattern:
+                        or_clause += f"'{get_sen_node_id(cursor, elem)}', "
+
+                    or_clause = or_clause[:-2] + ")"
+                    pattern_filters.append(or_clause)
+
+                else:
+                    # pattern_variables.append(pattern[2][1:])
+                    pattern_filters.append(
+                        f"in_node IN (SELECT id FROM sentence_graph_node WHERE value LIKE '{clean_pattern}%')")
 
             else:
 
@@ -111,7 +120,8 @@ def build_query(cursor: Cursor, rule: Rule) -> str:
         subselect_variables = f'{"out_node, " if pattern[0][1:] in pattern_variables else ""}{"type, " if pattern[1][1:] in pattern_variables else ""}{"in_node, " if pattern[2][1:] in pattern_variables else ""}'
         subselect_filters = " AND ".join(pattern_filters)
 
-        subselect = f'(SELECT {subselect_variables[:-2]} FROM sentence_graph_relation WHERE {subselect_filters})' if pattern[1] != '!rgx' else f"{subselect_filters}"
+        subselect = f'(SELECT {subselect_variables[:-2]} FROM sentence_graph_relation WHERE {subselect_filters})' if '|' not in pattern[
+            2] else f"{subselect_filters}"
         pattern_string = f'({", ".join(map(lambda s: f"{s}.id", pattern_variables))}) {"NOT " if pattern[3]=="NOT" else ""}IN {subselect}'
 
         where_clauses.append(pattern_string)
@@ -125,7 +135,8 @@ def build_query(cursor: Cursor, rule: Rule) -> str:
 
 def build_and_apply_rules(db, cursor: Cursor, stratas: list[list[Rule]], DEBUG=False):
 
-    strata_morphisms = []
+    # strata_application_result = set()
+
     for strata in stratas:
         # print("=======================New Strata=======================")
         rule_applications_res = None
@@ -137,11 +148,10 @@ def build_and_apply_rules(db, cursor: Cursor, stratas: list[list[Rule]], DEBUG=F
 
             rule_applications_res = loop_over_strata(db, cursor, strata, DEBUG)
 
-            if rule_applications_res is not None:
-                strata_morphisms += rule_applications_res
-                print("app res : ", rule_applications_res)
-                print("app res old : ", rule_applications_res_old)
-    # print(strata_morphisms)
+            # if rule_applications_res is not None:
+            # strata_application_result.add(rule_applications_res)
+
+    # return strata_application_result
 
 
 def loop_over_strata(db, cursor: Cursor, strata: list[Rule], DEBUG=False):
