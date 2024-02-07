@@ -3,6 +3,7 @@ Inference and NLP engine using [JeuxDeMots](https://www.jeuxdemots.org/rezo-dump
 
 # Dependencies
 
+- Python3
 - requests
 - BeautifulSoup4
 
@@ -19,5 +20,5 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Execute main
-python3 main.py
+python3 main.py --input <input_file>
 ```
