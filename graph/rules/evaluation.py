@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from sqlite3 import Cursor, IntegrityError
 from database.insertion import insert_relation_type
 from graph.insertion import insert_sen_node
-from graph.text.parsing import get_lowest_available_id, get_sen_node_id
+from graph.text.parsing import get_lowest_available_id, get_lowest_available_value_id, get_sen_node_id
 
 from jdm.inference import get_reltype_id
 
@@ -28,15 +28,18 @@ class Rule:
                     if entity[0] == "$":
                         body_variables.append(entity)
 
+        return existential
+
+    def get_head_variables(self):
+        head_variables = []
         for head_pattern in self.head:
             if head_pattern[3] == "EX":
                 for head_entity in head_pattern:
                     if head_entity[0] == "$":
-                        if head_entity not in body_variables and head_entity not in existential:
-                            existential.append(head_entity)
-        return existential
+                        head_variables.append(head_entity)
+        return head_variables
 
-    def get_frontier(self):
+    def get_body_variables(self):
         body_variables = []
         frontier = []
         for pattern in self.body:
@@ -52,9 +55,28 @@ class Rule:
                         frontier.append(head_entity)
         return body_variables
 
+    def get_frontier(self):
+        body_variables = []
+        frontier = []
+        for pattern in self.body:
+            # if pattern[3] == "EX":
+            for entity in pattern:
+                if entity[0] == "$" and entity not in body_variables:
+                    body_variables.append(entity)
+
+        for head_pattern in self.head:
+            for head_entity in head_pattern:
+                if head_entity[0] == "$":
+                    if head_entity in body_variables and head_entity not in frontier:
+                        frontier.append(head_entity)
+        return frontier
+
+    def get_shared_variables(self):
+        pass
+
 
 def build_query(cursor: Cursor, rule: Rule) -> str:
-    body_variables = rule.get_frontier()
+    body_variables = rule.get_body_variables()
     select_variables = ", ".join(
         [f'{var[1:]}.id' for var in body_variables])
 
@@ -135,10 +157,7 @@ def build_query(cursor: Cursor, rule: Rule) -> str:
 
 def build_and_apply_rules(db, cursor: Cursor, stratas: list[list[Rule]], DEBUG=False):
 
-    # strata_application_result = set()
-
     for strata in stratas:
-        # print("=======================New Strata=======================")
         rule_applications_res = None
         rule_applications_res_old = None
 
@@ -148,11 +167,6 @@ def build_and_apply_rules(db, cursor: Cursor, stratas: list[list[Rule]], DEBUG=F
 
             rule_applications_res = loop_over_strata(db, cursor, strata, DEBUG)
 
-            # if rule_applications_res is not None:
-            # strata_application_result.add(rule_applications_res)
-
-    # return strata_application_result
-
 
 def loop_over_strata(db, cursor: Cursor, strata: list[Rule], DEBUG=False):
 
@@ -161,7 +175,7 @@ def loop_over_strata(db, cursor: Cursor, strata: list[Rule], DEBUG=False):
     for rule in strata:
 
         morphisms = set()
-        variables = rule.get_frontier()
+        variables = rule.get_body_variables()
 
         triggers_query = build_query(cursor, rule)
 
@@ -173,9 +187,22 @@ def loop_over_strata(db, cursor: Cursor, strata: list[Rule], DEBUG=False):
             morphisms.add(tuple(zip(variables, trigger)))
 
         if len(morphisms) != 0:
+            existential_right_var = list(set([
+                x for x in rule.get_head_variables() if x not in rule.get_body_variables()]))
+
             for morphism in morphisms:
 
-                # print("morphisms : ", dict(morphism))
+                generated_variables = {"": -1}
+
+                for var in existential_right_var:
+                    subj_value = var.replace(
+                        "$", "") + str(get_lowest_available_value_id(cursor))
+                    subj_id = get_lowest_available_value_id(
+                        cursor)
+
+                    insert_sen_node(cursor, subj_id, subj_value)
+
+                    generated_variables[subj_value] = subj_id
 
                 for atom in rule.head:
                     morphism_dict = dict(morphism)
@@ -185,10 +212,11 @@ def loop_over_strata(db, cursor: Cursor, strata: list[Rule], DEBUG=False):
                             cursor, morphism_dict, atom))
 
                     if atom[3] == "EX":
+
                         try:
                             query = build_insert_query(
-                                cursor, morphism_dict, atom)
-                            # print(query)
+                                cursor, morphism_dict, atom, generated_variables)
+                            print(query)
                             cursor.execute(query)
                         except IntegrityError:
                             pass
@@ -210,16 +238,20 @@ def build_delete_query(cursor: Cursor, morphism: dict[str, int], triplet: tuple[
     return res
 
 
-def build_insert_query(cursor: Cursor, morphism: dict[str, int], triplet: tuple[str, str, str, str]) -> str:
+def build_insert_query(cursor: Cursor, morphism: dict[str, int], triplet: tuple[str, str, str, str], generated_variables: dict[str, int]) -> str:
+
+    subject = list(filter(
+        lambda x: triplet[0].replace("$", "") in x, generated_variables.keys()))
+    print("subject : ", subject)
+
+    print("gen_var : ", generated_variables)
 
     object = triplet[2]
-    # print("object : ", object)
     obj_id = object
+
     if object.startswith("$"):
         if object in morphism.keys():
             obj_id = morphism[object]
-        else:
-            pass
 
     else:
         obj_id = get_sen_node_id(cursor, object)
@@ -234,6 +266,8 @@ def build_insert_query(cursor: Cursor, morphism: dict[str, int], triplet: tuple[
 
     res = "INSERT INTO sentence_graph_relation\n(id, out_node, type, in_node, weight)\nVALUES("
 
+    # FIXME: Infinite new morphism creation
+    # res += f"'{get_lowest_available_id(cursor)}', '{morphism[triplet[0]] if triplet[0] in morphism.keys() else generated_variables[subject[0]]}', "
     res += f"'{get_lowest_available_id(cursor)}', '{morphism[triplet[0]] if triplet[0] in morphism.keys() else -1}', "
     res += f"'{get_reltype_id(cursor, triplet[1])}', "
     res += f"'{obj_id}', 1)"

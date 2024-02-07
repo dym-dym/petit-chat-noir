@@ -23,7 +23,7 @@ def get_sen_node_id(cursor: Cursor, name: str):
 
 
 def parse_text(cursor: Cursor, input: str, DEBUG) -> str:
-    sentence_delimiters = set(".?!")
+    sentence_delimiters = set(".?!,;")
 
     elisions = {
         "j'": "je ",
@@ -34,7 +34,7 @@ def parse_text(cursor: Cursor, input: str, DEBUG) -> str:
     }
 
     for delimiter in sentence_delimiters:
-        input = input.replace(delimiter, f" {delimiter} ")
+        input = input.replace(delimiter, "")  # f" {delimiter} ")
 
     for key in elisions.keys():
         input = input.replace(key, elisions[key])
@@ -56,12 +56,12 @@ def parse_text(cursor: Cursor, input: str, DEBUG) -> str:
 
     for i in range(len(text) - 1):
 
-        insert_sen_node(cursor, i+1, text[i])
-        insert_sen_node(cursor, i+2, text[i+1])
+        insert_sen_node(cursor, i + 1, text[i])
+        insert_sen_node(cursor, i + 2, text[i + 1])
         subject = text[i] if not all(
             c in sentence_delimiters for c in text[i]) else "_NEW_SENTENCE"
-        object = text[i+1] if not all(
-            c in sentence_delimiters for c in text[i+1]) else "_NEW_SENTENCE"
+        object = text[i + 1] if not all(
+            c in sentence_delimiters for c in text[i + 1]) else "_NEW_SENTENCE"
 
         subject_id = i
         object_id = i + 1
@@ -73,7 +73,7 @@ def parse_text(cursor: Cursor, input: str, DEBUG) -> str:
                        int(get_sen_node_id(cursor, subject)),
                        int(get_sen_node_id(cursor, object)), 100000, 1)
 
-    subject_id = len(text)-1
+    subject_id = len(text) - 1
     subject = text[-1] if not all(
         c in sentence_delimiters for c in text[-1]) else "_NEW_SENTENCE"
     insert_sen_node(cursor, len(text) + 1, "_END")
@@ -96,7 +96,7 @@ def find_compound_words(text: list[str]):
         for seq_start in range(len(list(range(len(text)))) - seq_length + 1):
             seq = ""
 
-            for word_i in range(seq_start, seq_start+seq_length):
+            for word_i in range(seq_start, seq_start + seq_length):
                 word = text[word_i]
                 if word_i > seq_start:
                     seq += " "
@@ -110,6 +110,13 @@ def find_compound_words(text: list[str]):
 
 def get_lowest_available_id(cursor: Cursor) -> int:
     cursor.execute("SELECT max(id) FROM sentence_graph_relation")
+
+    res = cursor.fetchone()[0]
+    return res + 1 if res is not None else 1
+
+
+def get_lowest_available_value_id(cursor: Cursor) -> int:
+    cursor.execute("SELECT max(id) FROM sentence_graph_node")
 
     res = cursor.fetchone()[0]
     return res + 1 if res is not None else 1

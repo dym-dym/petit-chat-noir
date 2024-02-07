@@ -3,10 +3,10 @@
 
 @STRATA 0
 
-$x r_succ $y => $x r_before $y
+#$x r_succ $y => $x r_before $y
 
 @STRATA 0.5
-$x r_before $y && $y r_before $z => $x r_before $z
+#$x r_before $y && $y r_before $z => $x r_before $z
 
 
 
